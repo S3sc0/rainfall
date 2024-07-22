@@ -1,0 +1,58 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+char    *auth;
+char    *service;
+
+int             main(void)
+{
+        char    input[5];
+        char    *tmp;
+        short   count;
+
+        while (true)
+        {
+                printf("%p %p\n", auth, service);
+
+                if(fgets(input, 128, stdin) == false)
+                        return 0;
+
+                if (strncmp(input, "auth ", 5) == 0)
+                {
+                        auth    = (char *)malloc(4);
+                        *auth   = 0;
+                        tmp     = input + 5;
+                        count   = 0;
+
+                        while (tmp[count])
+                                count++;
+
+                        tmp = input + 5;
+                        if (count <= 30)
+                                strcpy(auth, tmp);
+                }
+
+                if (strncmp(input, "reset", 5) == 0)
+                {
+                        free(auth);
+                }
+
+                if (strncmp(input, "service", 6) == 0)
+                {
+                        tmp = input + 7;
+                        service = strdup(tmp);
+                }
+
+                if (strncmp(input, "login", 5) == 0)
+                {
+                        if (auth[32] == 0)
+                                fwrite("Password:\n", 1, 10, stdout);
+                        else
+                                system("/bin/sh");
+                }
+        }
+
+        return 0;
+}
