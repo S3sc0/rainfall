@@ -1,0 +1,30 @@
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+void    n(void)
+{
+        system("/bin/cat /home/user/level7/.pass");
+        return;
+}
+
+void    m(void)
+{
+        puts("Nope");
+        return;
+}
+
+int     main(int ac, char **av)
+{
+        char    *dest;
+        void    (**fun_ptr)(void);
+
+        dest = (char *)malloc(64);
+        fun_ptr = malloc(sizeof(*fun_ptr));
+        *fun_ptr = m;
+
+        strcpy(dest, av[1]);
+        (*fun_ptr)();
+
+        return;
+}

