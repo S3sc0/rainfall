@@ -50,7 +50,7 @@ p:
    0x08048456 <+18>:    ret
 ```
 
-Exploting `printf()` format to overrite the value in the address `0x8049810`
+Exploting `printf()` format to overwrite the value in the address `0x8049810`
 
 Locating our input on the stack:
 
