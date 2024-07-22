@@ -1,0 +1,26 @@
+#include <stdio.h>
+
+void    p(void)
+{
+    unsigned int    ret_addr = __builtin_return_address(0);
+    char            buffer[76];
+  
+    fflush(stdout);
+    gets(buffer);
+
+    if ((ret_addr & 0xb0000000) == 0xb0000000) {
+      printf("(%p)\n", ret_addr);
+      exit(1);
+    }
+
+    puts(buffer);
+    strdup(buffer);
+
+    return;
+}
+
+void    main(void)
+{
+    p();
+    return;
+}
