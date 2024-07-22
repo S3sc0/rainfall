@@ -1,0 +1,20 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+int     main(int argc, char **argv)
+{
+  int   ret;
+  char  *shell;
+
+  ret = atoi(argv[1]);
+  if (ret == 423)
+  {
+    shell = strdup("/bin/sh");
+    execv("/bin/sh", &shell);
+  }
+  else
+    fwrite("No !\n", 1, 5, (FILE *)stderr);
+
+  return 0;
+}
